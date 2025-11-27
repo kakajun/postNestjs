@@ -5,13 +5,15 @@ import jwt from 'jsonwebtoken'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) { }
+  constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     const requiredType = this.reflector.get<string>(AUTH_API_KEY, context.getHandler())
     if (!requiredType) return true
     const req = context.switchToHttp().getRequest()
-    const token = req.headers['x-token'] || (req.headers['authorization'] || '').toString().replace(/^Bearer\s+/i, '')
+    const token =
+      req.headers['x-token'] ||
+      (req.headers['authorization'] || '').toString().replace(/^Bearer\s+/i, '')
     if (!token) return false
     try {
       const secret = process.env.JWT_SECRET || 'wb-secret'

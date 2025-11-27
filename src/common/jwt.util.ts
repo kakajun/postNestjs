@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 
 export function parseUser(headers: Record<string, any>) {
-  const token = headers['x-token'] || (headers['authorization'] || '').toString().replace(/^Bearer\s+/i, '')
+  const token =
+    headers['x-token'] || (headers['authorization'] || '').toString().replace(/^Bearer\s+/i, '')
   if (!token) return null
   try {
     const secret = process.env.JWT_SECRET || 'wb-secret'

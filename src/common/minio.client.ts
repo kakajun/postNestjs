@@ -7,6 +7,6 @@ export function createMinio() {
   const useSSL = endPoint.startsWith('https://')
   const host = endPoint.replace(/^https?:\/\//, '')
   const [address, portStr] = host.split(':')
-  const port = portStr ? Number(portStr) : (useSSL ? 443 : 80)
+  const port = portStr ? Number(portStr) : useSSL ? 443 : 80
   return new Client({ endPoint: address, port, useSSL, accessKey, secretKey })
 }

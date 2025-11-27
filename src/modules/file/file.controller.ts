@@ -1,4 +1,13 @@
-import { Controller, Delete, Get, Param, Post, UploadedFiles, UseInterceptors, UseInterceptors as UI } from '@nestjs/common'
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+  UseInterceptors as UI,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Repository } from 'typeorm'
@@ -6,17 +15,24 @@ import { ProjectAnnex } from '../../entities/project-annex.entity'
 import { ResponseInterceptor } from '../../common/response.interceptor'
 import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
 
+@ApiTags('File')
 @UI(ResponseInterceptor)
 @Controller('file')
 export class FileController {
   constructor(
-    @InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>,
+    @InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>
   ) { }
 
   @Post('upload/:projectId')
+  @ApiOperation({ summary: '上传项目附件' })
+  @ApiParam({ name: 'projectId', type: String })
   @UseInterceptors(FilesInterceptor('files'))
-  async upload(@Param('projectId') projectId: string, @UploadedFiles() files: Express.Multer.File[]) {
+  async upload(
+    @Param('projectId') projectId: string,
+    @UploadedFiles() files: Express.Multer.File[]
+  ) {
     if (!files || !files.length) return true
     const minio = createMinio()
     const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
@@ -47,16 +63,26 @@ export class FileController {
   }
 
   @Get('getUrl/:projectId/:imageId')
+  @ApiOperation({ summary: '获取附件访问 URL' })
+  @ApiParam({ name: 'projectId', type: String })
+  @ApiParam({ name: 'imageId', type: String })
   async getUrl(@Param('projectId') projectId: string, @Param('imageId') imageId: string) {
     const annex = await this.annexRepo.findOne({ where: { id: imageId, projectId } })
     if (!annex) return ''
     const minio = createMinio()
     const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
-    const url = await minio.presignedGetObject(bucket, annex.path, Number(process.env.MINIO_EXPIRE || 3600))
+    const url = await minio.presignedGetObject(
+      bucket,
+      annex.path,
+      Number(process.env.MINIO_EXPIRE || 3600)
+    )
     return url
   }
 
   @Delete('del/:projectId/:imageId')
+  @ApiOperation({ summary: '删除附件记录' })
+  @ApiParam({ name: 'projectId', type: String })
+  @ApiParam({ name: 'imageId', type: String })
   async del(@Param('projectId') projectId: string, @Param('imageId') imageId: string) {
     const annex = await this.annexRepo.findOne({ where: { id: imageId, projectId } })
     if (!annex) return false

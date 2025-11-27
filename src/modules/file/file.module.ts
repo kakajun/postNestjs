@@ -7,4 +7,4 @@ import { ProjectAnnex } from '../../entities/project-annex.entity'
   imports: [TypeOrmModule.forFeature([ProjectAnnex])],
   controllers: [FileController],
 })
-export class FileModule { }
+export class FileModule {}

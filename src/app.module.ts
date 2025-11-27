@@ -29,4 +29,4 @@ import { FileModule } from './modules/file/file.module'
     FileModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
