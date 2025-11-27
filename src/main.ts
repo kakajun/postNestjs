@@ -18,8 +18,15 @@ async function bootstrap() {
     .addApiKey({ type: 'apiKey', name: 'X-Token', in: 'header' }, 'x-token')
     .build()
   const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api-docs', app, document)
-  await app.listen(8081)
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+    customSiteTitle: 'post', // 出现在页面浏览器标签上显示的标题)
+  })
+  const port = Number(process.env.PORT)
+  await app.listen(port)
+  console.log(`http://localhost:${port}/docs`)
 }
 
 bootstrap()

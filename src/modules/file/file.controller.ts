@@ -35,7 +35,8 @@ export class FileController {
   ) {
     if (!files || !files.length) return true
     const minio = createMinio()
-    const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
+    const bucket = process.env.MINIO_BUCKET as string
+    if (!bucket) throw new Error('MinIO configuration missing: MINIO_BUCKET')
     for (const file of files) {
       const ext = (file.originalname.split('.').pop() || '').toLowerCase()
       const name = Date.now().toString(36)
@@ -47,7 +48,8 @@ export class FileController {
       } catch {
         thumbnail = file.buffer
       }
-      const expireSeconds = Number(process.env.MINIO_EXPIRE || 3600)
+      const expireSeconds = Number(process.env.MINIO_EXPIRE)
+      if (!expireSeconds) throw new Error('MinIO configuration missing: MINIO_EXPIRE')
       const url = await minio.presignedGetObject(bucket, objectName, expireSeconds)
       const annex = this.annexRepo.create({
         id: Date.now().toString(),
@@ -70,11 +72,12 @@ export class FileController {
     const annex = await this.annexRepo.findOne({ where: { id: imageId, projectId } })
     if (!annex) return ''
     const minio = createMinio()
-    const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
+    const bucket = process.env.MINIO_BUCKET as string
+    if (!bucket) throw new Error('MinIO configuration missing: MINIO_BUCKET')
     const url = await minio.presignedGetObject(
       bucket,
       annex.path,
-      Number(process.env.MINIO_EXPIRE || 3600)
+      Number(process.env.MINIO_EXPIRE)
     )
     return url
   }

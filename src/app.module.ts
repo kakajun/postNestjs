@@ -15,11 +15,11 @@ import { FileModule } from './modules/file/file.module'
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST || '127.0.0.1',
-      port: Number(process.env.DB_PORT || 3306),
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASS || '123123',
-      database: process.env.DB_NAME || 'ry-vue',
+      host: process.env.DB_HOST as string,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USER as string,
+      password: process.env.DB_PASS as string,
+      database: process.env.DB_NAME as string,
       entities: [SysDictData, Project, ProjectAnnex, SysUser, SysUserExtra],
       synchronize: false,
       logging: false,
@@ -29,4 +29,4 @@ import { FileModule } from './modules/file/file.module'
     FileModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

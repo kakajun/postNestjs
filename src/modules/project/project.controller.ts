@@ -38,7 +38,7 @@ export class ProjectController {
     @InjectRepository(SysUserExtra) private readonly userExtraRepo: Repository<SysUserExtra>,
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
     @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>
-  ) {}
+  ) { }
 
   @Get('hall')
   @ApiOperation({ summary: '项目大厅' })
@@ -90,7 +90,7 @@ export class ProjectController {
           arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       return { records, total, current: page, size }
     }
@@ -212,7 +212,8 @@ export class ProjectController {
     })
     if (files && files.length) {
       const minio = createMinio()
-      const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
+      const bucket = process.env.MINIO_BUCKET as string
+      if (!bucket) throw new Error('MinIO configuration missing: MINIO_BUCKET')
       for (const file of files) {
         const ext = (file.originalname.split('.').pop() || '').toLowerCase()
         const obj = `image/${Date.now().toString(36)}.${ext || 'jpg'}`
@@ -223,11 +224,9 @@ export class ProjectController {
         } catch {
           thumbnail = file.buffer
         }
-        const url = await minio.presignedGetObject(
-          bucket,
-          obj,
-          Number(process.env.MINIO_EXPIRE || 3600)
-        )
+        const expire = Number(process.env.MINIO_EXPIRE)
+        if (!expire) throw new Error('MinIO configuration missing: MINIO_EXPIRE')
+        const url = await minio.presignedGetObject(bucket, obj, expire)
         await this.annexRepo.save({
           id: Date.now().toString(),
           projectId: id,
@@ -275,7 +274,8 @@ export class ProjectController {
     )
     if (files && files.length) {
       const minio = createMinio()
-      const bucket = process.env.MINIO_BUCKET || 'wb-bucket'
+      const bucket = process.env.MINIO_BUCKET as string
+      if (!bucket) throw new Error('MinIO configuration missing: MINIO_BUCKET')
       for (const file of files) {
         const ext = (file.originalname.split('.').pop() || '').toLowerCase()
         const obj = `image/${Date.now().toString(36)}.${ext || 'jpg'}`
@@ -286,11 +286,9 @@ export class ProjectController {
         } catch {
           thumbnail = file.buffer
         }
-        const url = await minio.presignedGetObject(
-          bucket,
-          obj,
-          Number(process.env.MINIO_EXPIRE || 3600)
-        )
+        const expire = Number(process.env.MINIO_EXPIRE)
+        if (!expire) throw new Error('MinIO configuration missing: MINIO_EXPIRE')
+        const url = await minio.presignedGetObject(bucket, obj, expire)
         await this.annexRepo.save({
           id: Date.now().toString(),
           projectId: id,
