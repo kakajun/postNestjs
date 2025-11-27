@@ -16,6 +16,7 @@ import { ResponseInterceptor } from '../../common/response.interceptor'
 import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger'
+import type { Express } from 'express'
 
 @ApiTags('File')
 @UI(ResponseInterceptor)

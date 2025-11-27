@@ -20,6 +20,7 @@ import { ProjectAnnex } from '../../entities/project-annex.entity'
 import { SysUserExtra } from '../../entities/sys-user-extra.entity'
 import { UserProject } from '../../entities/user-project.entity'
 import { SysUser } from '../../entities/sys-user.entity'
+import { SysDictData } from '../../entities/sys-dict-data.entity'
 import { ResponseInterceptor } from '../../common/response.interceptor'
 import { AuthGuard } from '../../common/auth.guard'
 import { AuthApi } from '../../common/auth.decorator'
@@ -27,6 +28,7 @@ import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
 import { parseUser } from '../../common/jwt.util'
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
+import type { Express } from 'express'
 
 @ApiTags('Project')
 @UseInterceptors(ResponseInterceptor)
@@ -37,8 +39,9 @@ export class ProjectController {
     @InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>,
     @InjectRepository(SysUserExtra) private readonly userExtraRepo: Repository<SysUserExtra>,
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
-    @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>
-  ) {}
+    @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>,
+    @InjectRepository(SysDictData) private readonly dictRepo: Repository<SysDictData>
+  ) { }
 
   @Get('hall')
   @ApiOperation({ summary: '项目大厅' })
@@ -90,7 +93,7 @@ export class ProjectController {
           arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       return { records, total, current: page, size }
     }
