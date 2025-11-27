@@ -38,7 +38,7 @@ export class ProjectController {
     @InjectRepository(SysUserExtra) private readonly userExtraRepo: Repository<SysUserExtra>,
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
     @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>
-  ) { }
+  ) {}
 
   @Get('hall')
   @ApiOperation({ summary: '项目大厅' })
@@ -90,7 +90,7 @@ export class ProjectController {
           arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       return { records, total, current: page, size }
     }
