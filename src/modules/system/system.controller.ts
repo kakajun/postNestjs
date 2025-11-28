@@ -1,21 +1,15 @@
-import { Controller, Get, HttpException, Query, UseInterceptors } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
-import { SysDictData } from '../../entities/sys-dict-data.entity'
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common'
 import { ResponseInterceptor } from '../../common/response.interceptor'
 import { ApiOperation, ApiQuery, ApiTags, ApiOkResponse } from '@nestjs/swagger'
 import { Mock } from '../../common/mock'
-import { SmsService } from '../../common/sms.service'
 import { Public } from '../../common/public.decorator'
+import { SystemService } from './system.service'
 
 @ApiTags('System')
 @UseInterceptors(ResponseInterceptor)
 @Controller('sys')
 export class SystemController {
-  constructor(
-    @InjectRepository(SysDictData) private readonly dictRepo: Repository<SysDictData>,
-    private readonly smsService: SmsService
-  ) {}
+  constructor(private readonly systemService: SystemService) {}
 
   @Get('sms')
   @Public()
@@ -23,13 +17,7 @@ export class SystemController {
   @ApiQuery({ name: 'phone', required: true, description: '手机号', example: '13565888888' })
   @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.system.sms } } })
   async sendSms(@Query('phone') phone?: string) {
-    const p = (phone || '').trim()
-    if (!p) throw new HttpException('手机号不能为空', 400)
-    if (!this.smsService.rateLimitCheck()) throw new HttpException('操作太频繁', 429)
-    const randCode = Math.floor(10000 + Math.random() * 90000)
-    this.smsService.clear(p)
-    this.smsService.set(p, String(randCode))
-    return randCode
+    return this.systemService.sendSms(phone)
   }
 
   @Get('dict')
@@ -43,12 +31,6 @@ export class SystemController {
   })
   @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.system.dict } } })
   async getDict(@Query('code') code?: string) {
-    const dictType = code && code.trim() ? code : 'sys_technology'
-    const list = await this.dictRepo.find({
-      where: { dictType },
-      select: ['dictCode', 'fatherId', 'dictType', 'dictSort', 'dictLabel', 'dictValue', 'status'],
-      order: { dictSort: 'ASC' },
-    })
-    return list
+    return this.systemService.getDict(code)
   }
 }

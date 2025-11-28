@@ -4,10 +4,11 @@ import { UserController } from './user.controller'
 import { SysUser } from '../../entities/sys-user.entity'
 import { SysUserExtra } from '../../entities/sys-user-extra.entity'
 import { SysDictData } from '../../entities/sys-dict-data.entity'
+import { UserService } from './user.service'
 
 @Module({
   imports: [TypeOrmModule.forFeature([SysUser, SysUserExtra, SysDictData])],
   controllers: [UserController],
-  providers: [],
+  providers: [UserService],
 })
 export class UserModule {}

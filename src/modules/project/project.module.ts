@@ -7,9 +7,11 @@ import { UserProject } from '../../entities/user-project.entity'
 import { SysUser } from '../../entities/sys-user.entity'
 import { SysDictData } from '../../entities/sys-dict-data.entity'
 import { ProjectController } from './project.controller'
+import { ProjectService } from './project.service'
 
 @Module({
   imports: [TypeOrmModule.forFeature([Project, ProjectAnnex, SysUserExtra, UserProject, SysUser, SysDictData])],
   controllers: [ProjectController],
+  providers: [ProjectService],
 })
 export class ProjectModule {}
