@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node dist/main.js",
+    "preinstall": "node -e \"const ua = process.env.npm_config_user_agent || ''; if (!ua.includes('pnpm')) { console.error('只允许使用 pnpm 安装依赖'); process.exit(1); }\"",
+    "start": "node -r tsconfig-paths/register dist/main.js",
     "build": "tsc -p tsconfig.json",
-    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/main.ts",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,json,md}\"",
@@ -28,7 +29,8 @@
     "sharp": "^0.34.5",
     "jsonwebtoken": "^9.0.2",
     "swagger-ui-express": "^5.0.1",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
     "ts-node": "^10.9.2",

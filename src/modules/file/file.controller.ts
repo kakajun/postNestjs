@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UploadedFiles,
-  UseInterceptors,
-  UseInterceptors as UI,
-} from '@nestjs/common'
+import { Controller, Delete, Get, Param, Post, UploadedFiles, UseInterceptors, UseInterceptors as UI } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Repository } from 'typeorm'
@@ -15,24 +6,16 @@ import { ProjectAnnex } from '../../entities/project-annex.entity'
 import { ResponseInterceptor } from '../../common/response.interceptor'
 import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
-import {
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-  ApiConsumes,
-  ApiBody,
-  ApiOkResponse,
-  ApiResponse,
-} from '@nestjs/swagger'
+import { ApiOperation, ApiParam, ApiTags, ApiConsumes, ApiBody, ApiOkResponse } from '@nestjs/swagger'
+import { Mock } from '../../common/mock'
 import type { Express } from 'express'
+import { Public } from '../../common/public.decorator'
 
 @ApiTags('File')
 @UI(ResponseInterceptor)
 @Controller('file')
 export class FileController {
-  constructor(
-    @InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>
-  ) {}
+  constructor(@InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>) {}
 
   @Post('upload/:projectId')
   @ApiOperation({ summary: '上传项目附件' })
@@ -46,17 +29,9 @@ export class FileController {
       },
     },
   })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.file.upload } } })
   @UseInterceptors(FilesInterceptor('files'))
-  async upload(
-    @Param('projectId') projectId: string,
-    @UploadedFiles() files: Express.Multer.File[]
-  ) {
+  async upload(@Param('projectId') projectId: string, @UploadedFiles() files: Express.Multer.File[]) {
     if (!files || !files.length) return true
     const minio = createMinio()
     const bucket = process.env.MINIO_BUCKET as string
@@ -89,24 +64,11 @@ export class FileController {
   }
 
   @Get('getUrl/:projectId/:imageId')
+  @Public()
   @ApiOperation({ summary: '获取附件访问 URL' })
   @ApiParam({ name: 'projectId', type: String, example: 'P2024112801' })
   @ApiParam({ name: 'imageId', type: String, example: 'A2024112801' })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': {
-        example: { code: 0, msg: 'success', status: 200, data: 'https://...' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '未找到返回空字符串',
-    content: {
-      'application/json': { example: { code: 0, msg: 'success', status: 200, data: '' } },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.file.getUrl } } })
   async getUrl(@Param('projectId') projectId: string, @Param('imageId') imageId: string) {
     const annex = await this.annexRepo.findOne({ where: { id: imageId, projectId } })
     if (!annex) return ''
@@ -121,12 +83,7 @@ export class FileController {
   @ApiOperation({ summary: '删除附件记录' })
   @ApiParam({ name: 'projectId', type: String, example: 'P2024112801' })
   @ApiParam({ name: 'imageId', type: String, example: 'A2024112801' })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.file.del } } })
   async del(@Param('projectId') projectId: string, @Param('imageId') imageId: string) {
     const annex = await this.annexRepo.findOne({ where: { id: imageId, projectId } })
     if (!annex) return false

@@ -1,0 +1,146 @@
+export const Mock = {
+  user: {
+    login: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: { token: 'eyJ...', isAuditor: true },
+    },
+    register: { code: 0, msg: 'success', status: 200, data: true },
+    info: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        userId: '100',
+        userName: 'HL',
+        nickName: 'HL',
+        phonenumber: '13565888888',
+        deptId: '100',
+        status: 0,
+        orgType: 0,
+        orgName: 'HL',
+        technology: 'Java,NestJS',
+        technologyTag: 'Java,NestJS',
+        latitude: 30.12,
+        longitude: 120.12,
+      },
+    },
+  },
+  project: {
+    hall: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        records: [
+          {
+            id: 'P2024112801',
+            projectName: '项目A',
+            technology: 'Java',
+            request: '需求',
+            category: 'A',
+            createTime: '2025-11-28T08:00:00Z',
+            annexList: [{ id: 'A1', url: 'https://...', expireTime: '2025-12-01T00:00:00Z' }],
+          },
+        ],
+        total: 1,
+        current: 1,
+        size: 10,
+      },
+    },
+    list: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        records: [
+          {
+            id: 'P2024112801',
+            projectName: '项目A',
+            status: 1,
+            auditStatus: 1,
+            createTime: '2025-11-28T08:00:00Z',
+          },
+        ],
+        total: 1,
+        current: 1,
+        size: 10,
+      },
+    },
+    detail: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        id: 'P2024112801',
+        projectName: '项目A',
+        technology: 'Java',
+        request: '需求',
+        category: 'A',
+        annexList: [{ id: 'A1', url: 'https://...', expireTime: '2025-12-01T00:00:00Z' }],
+      },
+    },
+    push: { code: 0, msg: 'success', status: 200, data: true },
+    delete: { code: 0, msg: 'success', status: 200, data: true },
+    add: { code: 0, msg: 'success', status: 200, data: true },
+    update: { code: 0, msg: 'success', status: 200, data: true },
+    myAuditList: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        records: [{ id: 'P2024112801', projectName: '项目A', auditStatus: 0, publisher: 'HL' }],
+        total: 1,
+        current: 1,
+        size: 10,
+      },
+    },
+    updateAudit: { code: 0, msg: 'success', status: 200, data: true },
+    take: { code: 0, msg: 'success', status: 200, data: true },
+    myTakeList: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: {
+        records: [
+          {
+            id: 'P2024112801',
+            projectName: '项目A',
+            contact: 'HL',
+            phone: '13565888888',
+            annexList: [],
+            takeTime: '2025-11-28T08:00:00Z',
+          },
+        ],
+        total: 1,
+        current: 1,
+        size: 10,
+      },
+    },
+  },
+  file: {
+    upload: { code: 0, msg: 'success', status: 200, data: true },
+    getUrl: { code: 0, msg: 'success', status: 200, data: 'https://...' },
+    del: { code: 0, msg: 'success', status: 200, data: true },
+  },
+  system: {
+    sms: { code: 0, msg: 'success', status: 200, data: 32280 },
+    dict: {
+      code: 0,
+      msg: 'success',
+      status: 200,
+      data: [
+        {
+          dictCode: 1,
+          fatherId: 0,
+          dictType: 'sys_technology',
+          dictSort: 1,
+          dictLabel: 'Java',
+          dictValue: 'Java',
+          status: 0,
+        },
+      ],
+    },
+  },
+}

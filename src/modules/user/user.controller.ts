@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  HttpException,
-  Post,
-  UseInterceptors,
-} from '@nestjs/common'
+import { Body, Controller, Get, Headers, HttpException, Post, UseInterceptors } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { SysUser } from '../../entities/sys-user.entity'
@@ -14,21 +6,12 @@ import { SysUserExtra } from '../../entities/sys-user-extra.entity'
 import { SysDictData } from '../../entities/sys-dict-data.entity'
 import { ResponseInterceptor } from '../../common/response.interceptor'
 import { SmsService } from '../../common/sms.service'
-import {
-  ApiBody,
-  ApiOperation,
-  ApiTags,
-  ApiHeader,
-  ApiBearerAuth,
-  ApiResponse,
-  ApiOkResponse,
-  ApiBadRequestResponse,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
-} from '@nestjs/swagger'
+import { ApiBody, ApiOperation, ApiTags, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger'
+import { Mock } from '../../common/mock'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { parseUser } from '../../common/jwt.util'
+import { Public } from '../../common/public.decorator'
 
 @ApiTags('User')
 @UseInterceptors(ResponseInterceptor)
@@ -42,6 +25,7 @@ export class UserController {
   ) {}
 
   @Post('login')
+  @Public()
   @ApiOperation({ summary: '登录' })
   @ApiBody({
     schema: {
@@ -56,43 +40,7 @@ export class UserController {
       demo: { value: { phone: '13565888888', captcha: '32280', userType: '01' } },
     },
   })
-  @ApiResponse({
-    status: 200,
-    description: '成功',
-    content: {
-      'application/json': {
-        example: {
-          code: 0,
-          msg: 'success',
-          status: 200,
-          data: { token: 'eyJ...', isAuditor: true },
-        },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: '参数或验证码错误',
-    content: {
-      'application/json': {
-        example: { statusCode: 400, message: '验证码不正确', error: 'Bad Request' },
-      },
-    },
-  })
-  @ApiForbiddenResponse({
-    description: '账号停用',
-    content: {
-      'application/json': {
-        example: { statusCode: 403, message: '账号已停用，请联系管理员', error: 'Forbidden' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 500,
-    description: '服务端配置错误',
-    content: {
-      'application/json': { example: { statusCode: 500, message: '服务端未配置 JWT_SECRET' } },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.user.login } } })
   async login(@Body() body: any) {
     const phone = (body?.phone || '').trim()
     const captcha = (body?.captcha || '').trim()
@@ -128,6 +76,7 @@ export class UserController {
   }
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: '用户注册' })
   @ApiBody({
     schema: {
@@ -154,20 +103,7 @@ export class UserController {
       },
     },
   })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: '参数或验证码错误/已注册',
-    content: {
-      'application/json': {
-        example: { statusCode: 400, message: '该手机号已注册', error: 'Bad Request' },
-      },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.user.register } } })
   async register(@Body() body: any) {
     const phone = (body?.phone || '').trim()
     const captcha = (body?.captcha || '').trim()
@@ -207,52 +143,7 @@ export class UserController {
     schema: { type: 'object', properties: { token: { type: 'string' } } },
     examples: { demo: { value: { token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' } } },
   })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': {
-        example: {
-          code: 0,
-          msg: 'success',
-          status: 200,
-          data: {
-            userId: '100',
-            userName: 'HL',
-            nickName: 'HL',
-            phonenumber: '13565888888',
-            deptId: '100',
-            status: 0,
-            orgType: 0,
-            orgName: 'HL',
-            technology: 'Java,NestJS',
-            technologyTag: 'Java,NestJS',
-            latitude: 30.12,
-            longitude: 120.12,
-          },
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: '未登录',
-    content: {
-      'application/json': {
-        example: { statusCode: 401, message: '未登录', error: 'Unauthorized' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: '用户不存在',
-    content: { 'application/json': { example: { statusCode: 404, message: '用户不存在' } } },
-  })
-  @ApiResponse({
-    status: 500,
-    description: '服务端配置错误',
-    content: {
-      'application/json': { example: { statusCode: 500, message: '服务端未配置 JWT_SECRET' } },
-    },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.user.info } } })
   async info(@Body() _body: any) {
     const secret = process.env.JWT_SECRET as string
     if (!secret) throw new HttpException('服务端未配置 JWT_SECRET', 500)
@@ -277,47 +168,7 @@ export class UserController {
   @Get('info')
   @ApiOperation({ summary: '我的资料（GET，从头部解析）' })
   @ApiBearerAuth('bearer')
-  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
-  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
-  @ApiOkResponse({
-    description: '成功',
-    content: {
-      'application/json': {
-        example: {
-          code: 0,
-          msg: 'success',
-          status: 200,
-          data: {
-            userId: '100',
-            userName: 'HL',
-            nickName: 'HL',
-            phonenumber: '13565888888',
-            deptId: '100',
-            status: 0,
-            orgType: 0,
-            orgName: 'HL',
-            technology: 'Java,NestJS',
-            technologyTag: 'Java,NestJS',
-            latitude: 30.12,
-            longitude: 120.12,
-          },
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: '未登录',
-    content: {
-      'application/json': {
-        example: { statusCode: 401, message: '未登录', error: 'Unauthorized' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: '用户不存在',
-    content: { 'application/json': { example: { statusCode: 404, message: '用户不存在' } } },
-  })
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.user.info } } })
   async infoGet(@Headers() headers: Record<string, any>) {
     const user = parseUser(headers)
     if (!user?.userId) throw new HttpException('未登录', 401)

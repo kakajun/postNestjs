@@ -9,16 +9,7 @@ import { SysDictData } from '../../entities/sys-dict-data.entity'
 import { ProjectController } from './project.controller'
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Project,
-      ProjectAnnex,
-      SysUserExtra,
-      UserProject,
-      SysUser,
-      SysDictData,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Project, ProjectAnnex, SysUserExtra, UserProject, SysUser, SysDictData])],
   controllers: [ProjectController],
 })
 export class ProjectModule {}
