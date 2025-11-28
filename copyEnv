@@ -5,6 +5,7 @@ DB_PORT=3306
 DB_USER=root
 DB_PASS=123123
 DB_NAME=ry-vue
+WB_DEPT_ID=100
 
 JWT_SECRET=wb-secret
 

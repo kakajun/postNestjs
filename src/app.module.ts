@@ -8,7 +8,9 @@ import { SysUser } from './entities/sys-user.entity'
 import { SysUserExtra } from './entities/sys-user-extra.entity'
 import { SystemModule } from './modules/system/system.module'
 import { ProjectModule } from './modules/project/project.module'
+import { UserModule } from './modules/user/user.module'
 import { FileModule } from './modules/file/file.module'
+import { CommonModule } from './common/common.module'
 
 @Module({
   imports: [
@@ -25,8 +27,10 @@ import { FileModule } from './modules/file/file.module'
       logging: false,
     }),
     SystemModule,
+    CommonModule,
     ProjectModule,
     FileModule,
+    UserModule,
   ],
 })
 export class AppModule {}

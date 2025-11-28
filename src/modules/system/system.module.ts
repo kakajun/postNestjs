@@ -6,5 +6,6 @@ import { SystemController } from './system.controller'
 @Module({
   imports: [TypeOrmModule.forFeature([SysDictData])],
   controllers: [SystemController],
+  providers: [],
 })
-export class SystemModule {}
+export class SystemModule { }
