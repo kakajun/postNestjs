@@ -5,6 +5,6 @@ import { map } from 'rxjs/operators'
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
   intercept(_context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(map((data) => ({ code: 0, msg: 'success', data, status: 200 })))
+    return next.handle().pipe(map((data) => ({ code: 200, msg: 'success', data })))
   }
 }

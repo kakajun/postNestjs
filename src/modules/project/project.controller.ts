@@ -29,7 +29,6 @@ import sharp from 'sharp'
 import { parseUser } from '../../common/jwt.util'
 import { Public } from '../../common/public.decorator'
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags, ApiBearerAuth, ApiConsumes, ApiOkResponse } from '@nestjs/swagger'
-import type { Express } from 'express'
 import { Mock } from '../../common/mock'
 
 @ApiTags('Project')
@@ -43,7 +42,7 @@ export class ProjectController {
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
     @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>,
     @InjectRepository(SysDictData) private readonly dictRepo: Repository<SysDictData>
-  ) {}
+  ) { }
 
   @Get('hall')
   @Public()
@@ -89,21 +88,22 @@ export class ProjectController {
         const annexes = await this.annexRepo
           .createQueryBuilder('a')
           .where('a.project_id IN (:...ids)', { ids: projectIds })
-          .select(['a.id', 'a.projectId', 'a.url', 'a.expireTime'])
+          .select(['a.id', 'a.projectId', 'a.name', 'a.thumbnail', 'a.url', 'a.expireTime'])
           .getMany()
         const map = new Map<string, any[]>()
         annexes.forEach((a) => {
           const arr = map.get(a.projectId) || []
-          arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
+          arr.push({ id: a.id, name: a.name, thumbnail: a.thumbnail, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       const respRecords = (records as any[]).map((r: any) => {
         const { name, ...rest } = r
         return { ...rest, projectName: name, annexList: r.annexList || [] }
       })
-      return { records: respRecords, total, current: page, size }
+      const pages = Math.ceil(total / size)
+      return { records: respRecords, total, current: page, size, pages }
     }
     // 无经纬度：返回开放且审核通过的项目分页
     const [recordsRaw, total] = await this.projectRepo.findAndCount({
@@ -116,7 +116,8 @@ export class ProjectController {
       const { name, ...rest } = r
       return { ...rest, projectName: name }
     })
-    return { records, total, current: page, size }
+    const pages = Math.ceil(total / size)
+    return { records, total, current: page, size, pages }
   }
 
   @Get('list')
@@ -148,10 +149,13 @@ export class ProjectController {
       take: size,
     })
     const records = (recordsRaw as any[]).map((r: any) => {
-      const { name, ...rest } = r
-      return { ...rest, projectName: name }
+      const { name, status, auditStatus, ...rest } = r
+      const statusText = Number(status) === 1 ? '开启' : '推送关闭'
+      const auditText = Number(auditStatus) === 1 ? '审核通过' : Number(auditStatus) === 3 ? '审核未通过' : '审核中'
+      return { ...rest, projectName: name, status: statusText, auditStatus: auditText }
     })
-    return { records, total, current: page, size }
+    const pages = Math.ceil(total / size)
+    return { records, total, current: page, size, pages }
   }
 
   @Get('detail/:id')
@@ -162,16 +166,41 @@ export class ProjectController {
   async detail(@Param('id') id: string) {
     const proj = await this.projectRepo.findOne({ where: { id } })
     if (!proj) return null
-    const annexes = await this.annexRepo.find({
-      where: { projectId: id },
-      select: ['id', 'url', 'expireTime'],
-    })
+    const annexes = await this.annexRepo.find({ where: { projectId: id }, select: ['id', 'name', 'thumbnail', 'url', 'expireTime'] })
     const now = Date.now()
     annexes.forEach((a) => {
       if (a.expireTime && new Date(a.expireTime).getTime() < now) a.url = ''
     })
-    const { name, ...rest } = proj as any
-    return { ...rest, projectName: name, annexList: annexes }
+    const { name, status, auditStatus, auditRemark, createTime, ...rest } = proj as any
+    const statusText = Number(status) === 1 ? '开启' : '推送关闭'
+    const auditText = Number(auditStatus) === 1 ? '审核通过' : Number(auditStatus) === 3 ? '审核未通过' : '审核中'
+    const ups = await this.userProjectRepo.find({ where: { projectId: id } })
+    const uids = Array.from(new Set(ups.map((u) => u.uid)))
+    let users: SysUser[] = []
+    if (uids.length) {
+      users = await this.userRepo
+        .createQueryBuilder('u')
+        .select(['u.userId', 'u.userName', 'u.phonenumber'])
+        .where('u.user_id IN (:...ids)', { ids: uids })
+        .getMany()
+    }
+    const userMap = new Map<string, SysUser>()
+    users.forEach((u) => userMap.set(u.userId, u))
+    const projectUserVOList = ups.map((up) => ({
+      name: userMap.get(up.uid)?.userName,
+      phone: userMap.get(up.uid)?.phonenumber,
+      takeTime: up.takeTime,
+    }))
+    return {
+      ...rest,
+      projectName: name,
+      status: statusText,
+      auditStatus: auditText,
+      auditRemark,
+      createTime,
+      annexList: annexes,
+      projectUserVOList,
+    }
   }
 
   @ApiOperation({ summary: '更新推送状态' })
@@ -241,7 +270,7 @@ export class ProjectController {
   @UseInterceptors(FilesInterceptor('files'))
   async add(@UploadedFiles() files: Express.Multer.File[], @Body() body: any) {
     const name = body?.projectName || body?.name || ''
-    const technology = body?.technology || ''
+    const technology = body?.technical || body?.technology || ''
     const request = body?.request || ''
     const category = body?.category || ''
     if (files && files.length > 3) throw new HttpException('图片不能超过3张', 400)
@@ -279,7 +308,7 @@ export class ProjectController {
         await this.annexRepo.save({
           id: Date.now().toString(),
           projectId: id,
-          name,
+          name: file.originalname,
           path: obj,
           thumbnail,
           url,
@@ -328,7 +357,7 @@ export class ProjectController {
       { id },
       {
         name: body?.projectName || project.name,
-        technology: body?.technology || project.technology,
+        technology: body?.technical || body?.technology || project.technology,
         request: body?.request || project.request,
         auditStatus: 0,
         auditRemark: '',
@@ -395,7 +424,7 @@ export class ProjectController {
       skip: (page - 1) * size,
       take: size,
     })
-    if (!projects.length) return { records: [], total, current: page, size }
+    if (!projects.length) return { records: [], total, current: page, size, pages: Math.ceil(total / size) }
     const publisherIds = projects.map((p) => p.publisherId)
     const orgs = await this.userExtraRepo
       .createQueryBuilder('e')
@@ -406,9 +435,10 @@ export class ProjectController {
     orgs.forEach((e) => orgMap.set(e.userId, e.orgName))
     const records = projects.map((p) => {
       const { name, ...rest } = p as any
-      return { ...rest, projectName: name, publisher: orgMap.get(p.publisherId) }
+      return { ...rest, projectName: name, auditStatus: '待审核', publisher: orgMap.get(p.publisherId) }
     })
-    return { records, total, current: page, size }
+    const pages = Math.ceil(total / size)
+    return { records, total, current: page, size, pages }
   }
 
   @Put('update/audit')
@@ -498,12 +528,12 @@ export class ProjectController {
     const annexes = await this.annexRepo
       .createQueryBuilder('a')
       .where('a.project_id IN (:...ids)', { ids: projectIds })
-      .select(['a.id', 'a.projectId', 'a.url', 'a.expireTime'])
+      .select(['a.id', 'a.projectId', 'a.name', 'a.thumbnail', 'a.url', 'a.expireTime'])
       .getMany()
     const annexMap = new Map<string, any[]>()
     annexes.forEach((a) => {
       const arr = annexMap.get(a.projectId) || []
-      arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
+      arr.push({ id: a.id, name: a.name, thumbnail: a.thumbnail, url: a.url, expireTime: a.expireTime })
       annexMap.set(a.projectId, arr)
     })
     const publisherIds = projects.map((p) => p.publisherId)
@@ -519,12 +549,14 @@ export class ProjectController {
       return {
         ...rest,
         projectName: name,
+        status: Number((p as any).status) === 1 ? '开启' : '推送关闭',
         annexList: annexMap.get(p.id) || [],
         contact: publisherMap.get(p.publisherId)?.userName,
         phone: publisherMap.get(p.publisherId)?.phonenumber,
         takeTime: userProjects.find((up) => up.projectId === p.id)?.takeTime,
       }
     })
-    return { records, total, current: page, size }
+    const pages = Math.ceil(total / size)
+    return { records, total, current: page, size, pages }
   }
 }

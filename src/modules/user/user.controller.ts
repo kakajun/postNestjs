@@ -162,7 +162,18 @@ export class UserController {
       select: ['orgType', 'orgName', 'technology', 'technologyTag', 'latitude', 'longitude'],
     })
     if (!byId) throw new HttpException('用户不存在', 404)
-    return { ...byId, ...(extra || {}) }
+    const resp = {
+      phone: byId.phonenumber,
+      orgType: extra?.orgType,
+      orgName: extra?.orgName,
+      name: byId.userName,
+      avatarUrl: '',
+      technology: extra?.technology,
+      latitude: extra?.latitude,
+      longitude: extra?.longitude,
+      technologyTag: extra?.technologyTag,
+    }
+    return resp
   }
 
   @Get('info')
@@ -182,6 +193,17 @@ export class UserController {
       select: ['orgType', 'orgName', 'technology', 'technologyTag', 'latitude', 'longitude'],
     })
     if (!byId) throw new HttpException('用户不存在', 404)
-    return { ...byId, ...(extra || {}) }
+    const resp = {
+      phone: byId.phonenumber,
+      orgType: extra?.orgType,
+      orgName: extra?.orgName,
+      name: byId.userName,
+      avatarUrl: '',
+      technology: extra?.technology,
+      latitude: extra?.latitude,
+      longitude: extra?.longitude,
+      technologyTag: extra?.technologyTag,
+    }
+    return resp
   }
 }

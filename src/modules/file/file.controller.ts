@@ -8,7 +8,6 @@ import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
 import { ApiOperation, ApiParam, ApiTags, ApiConsumes, ApiBody, ApiOkResponse } from '@nestjs/swagger'
 import { Mock } from '../../common/mock'
-import type { Express } from 'express'
 import { Public } from '../../common/public.decorator'
 
 @ApiTags('File')
