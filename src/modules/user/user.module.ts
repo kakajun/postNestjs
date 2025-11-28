@@ -10,4 +10,4 @@ import { SysDictData } from '../../entities/sys-dict-data.entity'
   controllers: [UserController],
   providers: [],
 })
-export class UserModule { }
+export class UserModule {}

@@ -27,7 +27,21 @@ import { AuthApi } from '../../common/auth.decorator'
 import { createMinio } from '../../common/minio.client'
 import sharp from 'sharp'
 import { parseUser } from '../../common/jwt.util'
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+  ApiBearerAuth,
+  ApiHeader,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiResponse,
+} from '@nestjs/swagger'
 import type { Express } from 'express'
 
 @ApiTags('Project')
@@ -41,15 +55,43 @@ export class ProjectController {
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
     @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>,
     @InjectRepository(SysDictData) private readonly dictRepo: Repository<SysDictData>
-  ) { }
+  ) {}
 
   @Get('hall')
   @ApiOperation({ summary: '项目大厅' })
-  @ApiQuery({ name: 'pageNo', required: false, type: Number })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  @ApiQuery({ name: 'distance', required: false, type: Number })
-  @ApiQuery({ name: 'longitude', required: false, type: Number })
-  @ApiQuery({ name: 'latitude', required: false, type: Number })
+  @ApiQuery({ name: 'pageNo', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'distance', required: false, type: Number, example: 200000 })
+  @ApiQuery({ name: 'longitude', required: false, type: Number, example: 120.1234 })
+  @ApiQuery({ name: 'latitude', required: false, type: Number, example: 30.1234 })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 0,
+          msg: 'success',
+          status: 200,
+          data: {
+            records: [
+              {
+                id: 'P2024112801',
+                name: '项目A',
+                technology: 'Java',
+                request: '需求',
+                category: 'A',
+                createTime: '2025-11-28T08:00:00Z',
+                annexList: [{ id: 'A1', url: 'https://...', expireTime: '2025-12-01T00:00:00Z' }],
+              },
+            ],
+            total: 1,
+            current: 1,
+            size: 10,
+          },
+        },
+      },
+    },
+  })
   async hall(
     @Query('pageNo') pageNo = 1,
     @Query('pageSize') pageSize = 10,
@@ -93,7 +135,7 @@ export class ProjectController {
           arr.push({ id: a.id, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       return { records, total, current: page, size }
     }
@@ -109,10 +151,47 @@ export class ProjectController {
 
   @Get('list')
   @ApiOperation({ summary: '我发布的项目列表' })
-  @ApiQuery({ name: 'name', required: false, type: String })
-  @ApiQuery({ name: 'pageNo', required: false, type: Number })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number })
-  @ApiQuery({ name: 'publisherId', required: false, type: String })
+  @ApiQuery({ name: 'name', required: false, type: String, example: '项目A' })
+  @ApiQuery({ name: 'pageNo', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'publisherId', required: false, type: String, example: '100' })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 0,
+          msg: 'success',
+          status: 200,
+          data: {
+            records: [
+              {
+                id: 'P2024112801',
+                name: '项目A',
+                status: 1,
+                auditStatus: 1,
+                createTime: '2025-11-28T08:00:00Z',
+              },
+            ],
+            total: 1,
+            current: 1,
+            size: 10,
+          },
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: '未登录/未授权',
+    content: {
+      'application/json': {
+        example: { statusCode: 401, message: 'Unauthorized', error: 'Unauthorized' },
+      },
+    },
+  })
   @UseGuards(AuthGuard)
   @AuthApi('01')
   async list(
@@ -138,7 +217,34 @@ export class ProjectController {
 
   @Get('detail/:id')
   @ApiOperation({ summary: '项目详情' })
-  @ApiParam({ name: 'id', type: String })
+  @ApiParam({ name: 'id', type: String, example: 'P2024112801' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 0,
+          msg: 'success',
+          status: 200,
+          data: {
+            id: 'P2024112801',
+            name: '项目A',
+            technology: 'Java',
+            request: '需求',
+            category: 'A',
+            annexList: [{ id: 'A1', url: 'https://...', expireTime: '2025-12-01T00:00:00Z' }],
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: '未找到返回 null',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: null } },
+    },
+  })
   async detail(@Param('id') id: string) {
     const proj = await this.projectRepo.findOne({ where: { id } })
     if (!proj) return null
@@ -156,6 +262,24 @@ export class ProjectController {
   @ApiOperation({ summary: '更新推送状态' })
   @ApiBody({
     schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'integer' } } },
+    examples: { demo: { value: { id: 'P2024112801', status: 1 } } },
+  })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: '未登录/未授权',
+    content: {
+      'application/json': {
+        example: { statusCode: 401, message: 'Unauthorized', error: 'Unauthorized' },
+      },
+    },
   })
   @UseGuards(AuthGuard)
   @AuthApi('01')
@@ -169,10 +293,27 @@ export class ProjectController {
   }
 
   @ApiOperation({ summary: '删除项目' })
-  @ApiParam({ name: 'id', type: String })
+  @ApiParam({ name: 'id', type: String, example: 'P2024112801' })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
   @UseGuards(AuthGuard)
   @AuthApi('01')
   @Delete('delete/:id')
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: '未登录/未授权',
+    content: {
+      'application/json': {
+        example: { statusCode: 401, message: 'Unauthorized', error: 'Unauthorized' },
+      },
+    },
+  })
   async delete(@Param('id') id: string) {
     await this.projectRepo.delete({ id })
     await this.annexRepo.delete({ projectId: id })
@@ -181,6 +322,7 @@ export class ProjectController {
 
   @Post('add')
   @ApiOperation({ summary: '新增项目（JSON 或 multipart）' })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
@@ -189,7 +331,19 @@ export class ProjectController {
         technology: { type: 'string' },
         request: { type: 'string' },
         category: { type: 'string' },
+        files: { type: 'array', items: { type: 'string', format: 'binary' } },
       },
+    },
+    examples: {
+      json: {
+        value: { projectName: '项目A', technology: 'Java', request: '功能需求', category: 'A' },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
     },
   })
   @UseInterceptors(FilesInterceptor('files'))
@@ -245,6 +399,7 @@ export class ProjectController {
 
   @Put('update')
   @ApiOperation({ summary: '更新项目（可追加附件）' })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
@@ -253,7 +408,19 @@ export class ProjectController {
         projectName: { type: 'string' },
         technology: { type: 'string' },
         request: { type: 'string' },
+        files: { type: 'array', items: { type: 'string', format: 'binary' } },
       },
+    },
+    examples: {
+      json: {
+        value: { id: 'P2024112801', projectName: '项目A', technology: 'Java', request: '更新需求' },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
     },
   })
   @UseInterceptors(FilesInterceptor('files'))
@@ -307,8 +474,37 @@ export class ProjectController {
 
   @Get('my/audit/list')
   @ApiOperation({ summary: '待审核项目列表（审核员）' })
-  @ApiQuery({ name: 'pageNo', required: false, type: Number })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'pageNo', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 0,
+          msg: 'success',
+          status: 200,
+          data: {
+            records: [{ id: 'P2024112801', name: '项目A', auditStatus: 0, publisher: 'HL' }],
+            total: 1,
+            current: 1,
+            size: 10,
+          },
+        },
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: '非审核员',
+    content: {
+      'application/json': {
+        example: { statusCode: 403, message: 'FORBIDDEN', error: 'Forbidden' },
+      },
+    },
+  })
   async myAuditList(
     @Query('pageNo') pageNo = 1,
     @Query('pageSize') pageSize = 10,
@@ -358,6 +554,24 @@ export class ProjectController {
         remark: { type: 'string' },
       },
     },
+    examples: { demo: { value: { projectId: 'P2024112801', audit: 1, remark: '通过' } } },
+  })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: '非审核员',
+    content: {
+      'application/json': {
+        example: { statusCode: 403, message: 'FORBIDDEN', error: 'Forbidden' },
+      },
+    },
   })
   async updateAudit(@Body() body: any, @Query() query: any) {
     const user = parseUser((query as any)?._headers || {}) || null
@@ -388,6 +602,24 @@ export class ProjectController {
         distance: { type: 'integer' },
       },
     },
+    examples: { demo: { value: { projectId: 'P2024112801', status: 1, distance: 200000 } } },
+  })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': { example: { code: 0, msg: 'success', status: 200, data: true } },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: '不在范围内或已存在记录',
+    content: {
+      'application/json': {
+        example: { statusCode: 400, message: 'Bad Request', error: 'Bad Request' },
+      },
+    },
   })
   async take(@Body() body: any) {
     const { projectId, status, distance = 200000 } = body || {}
@@ -412,8 +644,38 @@ export class ProjectController {
   @AuthApi('02')
   @Get('my/take/list')
   @ApiOperation({ summary: '我的接单列表（接单方）' })
-  @ApiQuery({ name: 'pageNo', required: false, type: Number })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'pageNo', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, example: 10 })
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'Authorization', description: 'Bearer token', example: 'Bearer <token>' })
+  @ApiHeader({ name: 'X-Token', description: 'JWT token', example: '<token>' })
+  @ApiOkResponse({
+    description: '成功',
+    content: {
+      'application/json': {
+        example: {
+          code: 0,
+          msg: 'success',
+          status: 200,
+          data: {
+            records: [
+              {
+                id: 'P2024112801',
+                name: '项目A',
+                contact: 'HL',
+                phone: '13565888888',
+                annexList: [],
+                takeTime: '2025-11-28T08:00:00Z',
+              },
+            ],
+            total: 1,
+            current: 1,
+            size: 10,
+          },
+        },
+      },
+    },
+  })
   async myTakeList(@Query('pageNo') pageNo = 1, @Query('pageSize') pageSize = 10) {
     const page = Number(pageNo)
     const size = Number(pageSize)
