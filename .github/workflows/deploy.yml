@@ -22,10 +22,10 @@ jobs:
           echo "${{ secrets.ALIYUN_DOCKER_PASSWORD }}" | docker login --username ${{ secrets.ALIYUN_DOCKER_USERNAME }} --password-stdin crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com
 
       - name: Build Docker image
-        run: docker build -t crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest .
+        run: docker build -t crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest .
 
       - name: Push Docker image
-        run: docker push crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest
+        run: docker push crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,21 +45,21 @@ jobs:
             docker login --username ${{ secrets.ALIYUN_DOCKER_USERNAME }} --password ${{ secrets.ALIYUN_DOCKER_PASSWORD }} crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com
 
             echo "Stopping and removing existing container if exists..."
-            docker ps -q --filter "name=work-platform" | grep -q . && docker stop work-platform || echo "Container work-platform is not running"
-            docker ps -a -q --filter "name=work-platform" | grep -q . && docker rm work-platform || echo "Container work-platform does not exist"
+            docker ps -q --filter "name=platform-server" | grep -q . && docker stop platform-server || echo "Container platform-server is not running"
+            docker ps -a -q --filter "name=platform-server" | grep -q . && docker rm platform-server || echo "Container platform-server does not exist"
 
             echo "Removing old Docker image if exists..."
-            docker images -q crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest | grep -q . && docker rmi crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest || echo "Old image does not exist"
+            docker images -q crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest | grep -q . && docker rmi crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest || echo "Old image does not exist"
 
             echo "Pulling latest Docker image..."
-            docker pull crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest
+            docker pull crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest
 
             echo "Running new container..."
-            docker run -d --name work-platform \
-            -v /root/nestguazai:/app/guazai \
+            docker run -d --name platform-server \
+            -v /root/platform-guazai:/app/guazai \
             -v /var/log/nginx:/var/log/nginx \
-            -p 3000:3000 \
-            -p 7880:80 \
-            crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/work-platform:latest
+            -p 3002:8080 \
+            -p 7990:80 \
+            crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest
 
             echo "Deployment completed successfully."
