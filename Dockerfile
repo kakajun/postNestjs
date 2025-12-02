@@ -4,6 +4,7 @@ WORKDIR /app
 ENV CI=true
 ENV NODE_ENV=development
 COPY . .
+RUN [ -f ./.env ] || cp copyEnv .env
 RUN npm i -g pnpm && pnpm install  && pnpm run build
 
 # 第二阶段：拉取 GitHub Pages 静态站点
