@@ -33,7 +33,7 @@ COPY --from=frontend /usr/app/platform-front /usr/share/nginx/html
 # 复制后端文件
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/guazai ./guazai
+
 
 # 写入基础 Nginx 配置，指向 /usr/share/nginx/html
 RUN printf 'user nginx;\nworker_processes auto;\nerror_log /var/log/nginx/error.log warn;\npid /var/run/nginx.pid;\n\n' \
