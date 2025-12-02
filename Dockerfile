@@ -18,7 +18,7 @@ RUN curl -L "https://codeload.github.com/${GH_OWNER}/${GH_REPO}/zip/refs/heads/$
  && unzip site.zip \
  && mv ${GH_REPO}-${GH_BRANCH}/* . \
  && rm -rf ${GH_REPO}-${GH_BRANCH} site.zip
-echo "前端拷贝完成"
+RUN echo "前端拷贝完成"
 
 # 第三阶段：设置 Nginx 和后端环境
 FROM docker.m.daocloud.io/library/node:22.17.0-alpine
