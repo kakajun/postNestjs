@@ -5,5 +5,5 @@ nginx -g 'daemon off;' &
 set -a
 [ -f "/app/.env" ] && . /app/.env
 set +a
-export NODE_OPTIONS="--require tsconfig-paths/register"
+export NODE_OPTIONS="--require /app/paths.register.js"
 pm2-runtime dist/main.js

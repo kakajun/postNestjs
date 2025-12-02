@@ -35,6 +35,7 @@ COPY --from=frontend /usr/app/platform-front /usr/share/nginx/html
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.env .env
+COPY --from=builder /app/paths.register.js ./paths.register.js
 
 
 # 写入基础 Nginx 配置
