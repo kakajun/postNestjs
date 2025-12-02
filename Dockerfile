@@ -4,7 +4,7 @@ WORKDIR /app
 ENV CI=true
 ENV NODE_ENV=development
 COPY . .
-RUN npm i -g pnpm && pnpm install --frozen-lockfile --prod=false && pnpm run build
+RUN npm i -g pnpm && pnpm install  && pnpm run build
 
 # 第二阶段：拉取 GitHub Pages 静态站点
 FROM docker.m.daocloud.io/library/alpine:3.20 AS frontend
@@ -45,7 +45,7 @@ COPY --from=builder /app/start.sh /start.sh
 RUN chmod +x /start.sh
 
 # 暴露端口
-EXPOSE 80 3000
+EXPOSE 80 3001
 
 # 启动 Nginx 和后端应用
 CMD ["/start.sh"]
