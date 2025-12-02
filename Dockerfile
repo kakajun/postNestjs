@@ -33,12 +33,11 @@ COPY --from=frontend /usr/app/platform-front /usr/share/nginx/html
 # 复制后端文件
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.env ./.env
 
 
-# 写入基础 Nginx 配置，指向 /usr/share/nginx/html
-RUN printf 'user nginx;\nworker_processes auto;\nerror_log /var/log/nginx/error.log warn;\npid /var/run/nginx.pid;\n\n' \
-  'events { worker_connections 1024; }\n\n' \
-  'http {\n  include /etc/nginx/mime.types;\n  default_type application/octet-stream;\n  access_log /var/log/nginx/access.log;\n  sendfile on;\n  keepalive_timeout 65;\n  server {\n    listen 80;\n    server_name localhost;\n    root /usr/share/nginx/html;\n    index index.html;\n  }\n}\n' > /etc/nginx/nginx.conf
+# 写入基础 Nginx 配置
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
 # 复制启动脚本并设置权限
 COPY --from=builder /app/start.sh /start.sh
