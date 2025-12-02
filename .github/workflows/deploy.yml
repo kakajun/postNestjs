@@ -13,22 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Debug secrets presence (build)
-        shell: bash
-        run: |
-          set -e
-          USER="${{ secrets.ALIYUN_DOCKER_USERNAME }}"
-          PASS="${{ secrets.ALIYUN_DOCKER_PASSWORD }}"
-          if [ -z "$USER" ]; then echo "ALIYUN_DOCKER_USERNAME 未设置"; exit 1; fi
-          if [ -z "$PASS" ]; then echo "ALIYUN_DOCKER_PASSWORD 未设置"; exit 1; fi
-          if [ ${#USER} -gt 5 ]; then
-            MASK_USER="${USER:0:3}***${USER: -2}"
-          else
-            MASK_USER="***"
-          fi
-          echo "用户名已设置: $MASK_USER"
-          echo "密码已设置: 是"
-
       - name: Set up Docker Buildx (if needed)
         uses: docker/setup-buildx-action@v2
         if: false # 如果不需要 multi-platform builds, 可以省略此步骤
@@ -48,51 +32,17 @@ jobs:
     needs: build
 
     steps:
-      - name: Debug secrets presence (deploy)
-        shell: bash
-        run: |
-          set -e
-          USER="${{ secrets.ALIYUN_DOCKER_USERNAME }}"
-          PASS="${{ secrets.ALIYUN_DOCKER_PASSWORD }}"
-          if [ -z "$USER" ]; then echo "ALIYUN_DOCKER_USERNAME 未设置"; exit 1; fi
-          if [ -z "$PASS" ]; then echo "ALIYUN_DOCKER_PASSWORD 未设置"; exit 1; fi
-          if [ ${#USER} -gt 5 ]; then
-            MASK_USER="${USER:0:3}***${USER: -2}"
-          else
-            MASK_USER="***"
-          fi
-          echo "用户名已设置: $MASK_USER"
-          echo "密码已设置: 是"
-      - name: Debug server secrets presence
-        shell: bash
-        run: |
-          set -e
-          HOST="${{ secrets.SERVER_HOST }}"
-          USER="${{ secrets.SERVER_USERNAME }}"
-          KEY="${{ secrets.SERVER_SSH_KEY }}"
-          PASS="${{ secrets.SERVER_PASSWORD }}"
-          PORT="${{ secrets.SERVER_PORT }}"
-          PPHRASE="${{ secrets.SERVER_SSH_PASSPHRASE }}"
-          [ -z "$HOST" ] && echo "SERVER_HOST 未设置" && exit 1 || echo "SERVER_HOST 已设置"
-          [ -z "$USER" ] && echo "SERVER_USERNAME 未设置" && exit 1 || echo "SERVER_USERNAME 已设置"
-          if [ -n "$KEY" ]; then echo "SERVER_SSH_KEY 已设置"; else echo "SERVER_SSH_KEY 未设置"; fi
-          if [ -n "$PASS" ]; then echo "SERVER_PASSWORD 已设置"; else echo "SERVER_PASSWORD 未设置"; fi
-          if [ -n "$PORT" ]; then echo "SERVER_PORT=$PORT"; else echo "SERVER_PORT 未设置(默认22)"; fi
-          if [ -n "$PPHRASE" ]; then echo "SERVER_SSH_PASSPHRASE 已设置"; else echo "SERVER_SSH_PASSPHRASE 未设置"; fi
       - name: SSH to server and deploy
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
-          port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
 
             echo "Logging into Alibaba Cloud Docker registry..."
-            echo "${{ secrets.ALIYUN_DOCKER_PASSWORD }}" | docker login --username ${{ secrets.ALIYUN_DOCKER_USERNAME }} --password-stdin crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com
+            docker login --username ${{ secrets.ALIYUN_DOCKER_USERNAME }} --password ${{ secrets.ALIYUN_DOCKER_PASSWORD }} crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com
 
             echo "Stopping and removing existing container if exists..."
             docker ps -q --filter "name=platform-server" | grep -q . && docker stop platform-server || echo "Container platform-server is not running"
@@ -106,10 +56,9 @@ jobs:
 
             echo "Running new container..."
             docker run -d --name platform-server \
-            -v /root/platform-guazai:/app/guazai \
-            -v /var/log/nginx:/var/log/nginx \
+            -v /platfora/vlg/nginx:/var/log/nginx \
             -p 3002:8081 \
-            -p 7999:80 \
+            -p 7999 ${{ 8ecre0s.ALIYUN_DOCKER_PASSWORD }}
             crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest
 
             echo "Deployment completed successfully."
