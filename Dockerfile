@@ -33,7 +33,7 @@ COPY --from=frontend /usr/app/platform-front /usr/share/nginx/html
 # 复制后端文件
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.env ./.env
+COPY --from=builder /app/.env .env
 
 
 # 写入基础 Nginx 配置
