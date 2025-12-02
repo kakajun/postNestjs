@@ -45,7 +45,7 @@ COPY --from=builder /app/start.sh /start.sh
 RUN chmod +x /start.sh
 
 # 暴露端口
-EXPOSE 80 3001
+EXPOSE 80 8081
 
 # 启动 Nginx 和后端应用
 CMD ["/start.sh"]

@@ -71,10 +71,14 @@ jobs:
           USER="${{ secrets.SERVER_USERNAME }}"
           KEY="${{ secrets.SERVER_SSH_KEY }}"
           PASS="${{ secrets.SERVER_PASSWORD }}"
+          PORT="${{ secrets.SERVER_PORT }}"
+          PPHRASE="${{ secrets.SERVER_SSH_PASSPHRASE }}"
           [ -z "$HOST" ] && echo "SERVER_HOST 未设置" && exit 1 || echo "SERVER_HOST 已设置"
           [ -z "$USER" ] && echo "SERVER_USERNAME 未设置" && exit 1 || echo "SERVER_USERNAME 已设置"
           if [ -n "$KEY" ]; then echo "SERVER_SSH_KEY 已设置"; else echo "SERVER_SSH_KEY 未设置"; fi
           if [ -n "$PASS" ]; then echo "SERVER_PASSWORD 已设置"; else echo "SERVER_PASSWORD 未设置"; fi
+          if [ -n "$PORT" ]; then echo "SERVER_PORT=$PORT"; else echo "SERVER_PORT 未设置(默认22)"; fi
+          if [ -n "$PPHRASE" ]; then echo "SERVER_SSH_PASSPHRASE 已设置"; else echo "SERVER_SSH_PASSPHRASE 未设置"; fi
       - name: SSH to server and deploy
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -82,6 +86,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
+          port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
 
@@ -102,8 +108,8 @@ jobs:
             docker run -d --name platform-server \
             -v /root/platform-guazai:/app/guazai \
             -v /var/log/nginx:/var/log/nginx \
-            -p 3002:8080 \
-            -p 7990:80 \
+            -p 3002:8081 \
+            -p 7999:80 \
             crpi-nrc1eylr425ubrzn.cn-hangzhou.personal.cr.aliyuncs.com/kakajun/platform-server:latest
 
             echo "Deployment completed successfully."
