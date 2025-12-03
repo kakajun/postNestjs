@@ -98,7 +98,7 @@ jobs:
 
             echo "Running new container..."
             docker run -d --name platform-server \
-              -v /root/platform-env/.env:/app/.env \
+              -v /root/platform-env/.env:/app/.env:ro \
               -v /var/log/nginx:/var/log/nginx \
               -p 3002:8081 \
               -p 7999:80 \
