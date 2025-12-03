@@ -83,4 +83,12 @@ export class UserController {
   async infoGet(@Headers() headers: Record<string, any>) {
     return this.userService.infoGet(headers)
   }
+
+  @Post('logout')
+  @ApiOperation({ summary: '退出登录' })
+  @ApiBearerAuth('bearer')
+  @ApiOkResponse({ description: '成功', content: { 'application/json': { example: Mock.user.logout } } })
+  async logout(@Headers() headers: Record<string, any>) {
+    return this.userService.logout(headers)
+  }
 }

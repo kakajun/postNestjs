@@ -116,4 +116,11 @@ export class UserService {
     }
     return resp
   }
+
+  async logout(headers: Record<string, any>) {
+    const user = parseUser(headers)
+    if (!user?.userId) return true
+    await this.userExtraRepo.update({ userId: user.userId }, { tokenSign: null })
+    return true
+  }
 }

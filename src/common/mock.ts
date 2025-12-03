@@ -2,6 +2,7 @@ export const Mock = {
   user: {
     login: { code: 200, msg: 'success', data: { token: 'eyJ...', isAuditor: true } },
     register: { code: 200, msg: 'success', data: true },
+    logout: { code: 200, msg: 'success', data: true },
     info: {
       code: 200,
       msg: 'success',
