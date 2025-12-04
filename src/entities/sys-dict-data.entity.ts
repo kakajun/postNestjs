@@ -22,4 +22,7 @@ export class SysDictData {
 
   @Column({ name: 'status', type: 'varchar', length: 10, default: '0' })
   status: string
+
+  @Column({ name: 'remark', type: 'varchar', length: 255, nullable: true })
+  remark?: string
 }

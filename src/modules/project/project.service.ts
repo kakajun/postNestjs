@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common'
+import { Injectable, HttpException, OnModuleInit } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { Project } from '../../entities/project.entity'
@@ -12,7 +12,7 @@ import sharp from 'sharp'
 import { parseUser } from '../../common/jwt.util'
 
 @Injectable()
-export class ProjectService {
+export class ProjectService implements OnModuleInit {
   constructor(
     @InjectRepository(Project) private readonly projectRepo: Repository<Project>,
     @InjectRepository(ProjectAnnex) private readonly annexRepo: Repository<ProjectAnnex>,
@@ -20,7 +20,16 @@ export class ProjectService {
     @InjectRepository(UserProject) private readonly userProjectRepo: Repository<UserProject>,
     @InjectRepository(SysUser) private readonly userRepo: Repository<SysUser>,
     @InjectRepository(SysDictData) private readonly dictRepo: Repository<SysDictData>
-  ) {}
+  ) { }
+
+  async onModuleInit() {
+    try {
+      const rows: any[] = await this.projectRepo.query("SHOW COLUMNS FROM t_project LIKE 'category'")
+      if (!rows || rows.length === 0) {
+        await this.projectRepo.query("ALTER TABLE t_project ADD COLUMN category varchar(64) NULL")
+      }
+    } catch { }
+  }
 
   async hall(pageNo = 1, pageSize = 10, distance = 200000, longitude?: number, latitude?: number) {
     const page = Number(pageNo)
@@ -58,7 +67,7 @@ export class ProjectService {
           arr.push({ id: a.id, name: a.name, thumbnail: a.thumbnail, url: a.url, expireTime: a.expireTime })
           map.set(a.projectId, arr)
         })
-        ;(records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
+          ; (records as any).forEach((r: any) => (r.annexList = map.get(r.id) || []))
       }
       const respRecords = (records as any[]).map((r: any) => {
         const { name, ...rest } = r
@@ -150,10 +159,10 @@ export class ProjectService {
     const name = body?.projectName || body?.name || ''
     const technology = body?.technical || body?.technology || ''
     const request = body?.request || ''
-    const category = body?.category || ''
     if (files && files.length > 3) throw new HttpException('图片不能超过3张', 400)
     const id = Date.now().toString()
     const userId = body?.publisherId || '0'
+    const category = body?.category || ''
     await this.projectRepo.save({ id, publisherId: userId, name, technology, request, category, status: 1, auditStatus: 1, createTime: new Date(), updateTime: new Date() })
     if (files && files.length) {
       const minio = createMinio()
@@ -185,7 +194,7 @@ export class ProjectService {
     const annexCount = await this.annexRepo.count({ where: { projectId: id } })
     const addCount = files ? files.length : 0
     if (annexCount + addCount > 3) throw new HttpException('不能超过3张图片', 400)
-    await this.projectRepo.update({ id }, { name: body?.projectName || project.name, technology: body?.technical || body?.technology || project.technology, request: body?.request || project.request, auditStatus: 0, auditRemark: '', updateTime: new Date() })
+    await this.projectRepo.update({ id }, { name: body?.projectName || project.name, technology: body?.technical || body?.technology || project.technology, request: body?.request || project.request, category: body?.category ?? project.category, auditStatus: 0, auditRemark: '', updateTime: new Date() })
     if (files && files.length) {
       const minio = createMinio()
       const bucket = process.env.MINIO_BUCKET as string

@@ -25,9 +25,16 @@ export class SystemService {
     const dictType = code && code.trim() ? code : 'sys_technology'
     const list = await this.dictRepo.find({
       where: { dictType },
-      select: ['dictCode', 'fatherId', 'dictType', 'dictSort', 'dictLabel', 'dictValue', 'status'],
+      select: ['dictCode', 'fatherId', 'dictType', 'dictLabel', 'dictValue', 'remark'],
       order: { dictSort: 'ASC' },
     })
-    return list
+    return list.map((d) => ({
+      id: d.dictCode,
+      dictLabel: d.dictLabel,
+      dictType: d.dictType,
+      dictValue: d.dictValue,
+      fatherId: d.fatherId,
+      remark: d.remark,
+    }))
   }
 }
